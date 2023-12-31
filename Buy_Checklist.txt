@@ -1,0 +1,261 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © lpmadhu82
+//@version=5
+indicator("Simple Buy Checklist", overlay=true)
+rsiL = input.int(defval =14, title="RSI Length")
+rsiMAL = input.int(defval = 200, title="RSI MA Period")
+cLimit = input.float(defval = 1.0, title="MA Consolidation Percentage")
+showRSI = input.bool(defval=true, title="Show RSI")
+showMACD = input.bool(defval=true, title="Show MACD") 
+showSMA = input.bool(defval=true, title="Show SMA")
+showCsl = input.bool(defval=true, title="Show Consolidation")
+//targetLineWidth = input.int(defval =1, title="Target Width")
+slowSMALength = input.int(defval = 30, title="Slow SMA Length")
+fastSMALength = input.int(defval = 10, title="Fast SMA Length")
+tghtwksClRange = input.float(defval = 1.5, title="Tight Weeks Closing Range")
+tghtwksCandleRange = input.float(defval = 8, title="Tight Weeks Candle Range")
+tghtwksOpClRange = input.float(defval = 2, title="Tight Weeks Open Close Range")
+
+var smaSlow = 0.0
+var smaFast = 0.0
+var consolidation = false
+var closePerc = 0
+var sma200 = 0.0
+var wma10 = 0.0
+var wma30 = 0.0
+var macdRising = false
+var rsiRising = false
+var sma50Vol = 0.0
+var smaRising = false
+var rsRising = false
+
+[macdLine, signalLine, histLine] = ta.macd(close, 12, 26, 9)
+
+if timeframe.isweekly
+    smaSlow := ta.sma(close, slowSMALength)
+    smaFast := ta.sma(close, fastSMALength)
+    sma200 := ta.sma(close, 40)
+    wma10 := ta.sma(close, 10)
+    wma30 := ta.sma(close, 30)
+    sma50Vol := ta.sma(volume, 10)
+
+    
+
+
+if timeframe.isdaily
+    smaSlow := ta.sma(close, slowSMALength)
+    smaFast := ta.sma(close, fastSMALength)
+    sma200 := ta.sma(close, 200)
+    wma10 := ta.sma(close, 50)
+    wma30 := ta.sma(close, 150)
+    sma50Vol := ta.sma(volume, 50)
+
+
+rsi = ta.rsi(close, rsiL)
+rsiMA = ta.sma(rsi, rsiMAL)
+//Relative Strength
+thisStock = syminfo.tickerid 
+comparedStock = input.symbol("NSE:CNX500") 
+float[] relStr = array.new<float>(3, 0.0)
+
+array.set(relStr, 0, close[0]/request.security(comparedStock, timeframe.period, close[0]))
+array.set(relStr, 1, close[1]/request.security(comparedStock, timeframe.period, close[1]))
+array.set(relStr, 2, close[2]/request.security(comparedStock, timeframe.period, close[2]))
+
+
+
+plotchar(close[0]/request.security(comparedStock, timeframe.period, close[0]), "close[0]/request.security(comparedStock, timeframe.period, close[0])", "", location = location.top)
+plotchar(close[1]/request.security(comparedStock, timeframe.period, close[1]), "close[1]/request.security(comparedStock, timeframe.period, close[1])", "", location = location.top)
+
+
+
+plotchar(array.get(relStr, 0), "relStr0", "", location = location.top)
+plotchar(array.get(relStr, 1), "relStr1", "", location = location.top)
+plotchar(array.get(relStr, 2), "relStr2", "", location = location.top)
+
+if (bar_index == last_bar_index) and close[0] > smaFast and math.abs((smaSlow - smaFast)/smaSlow) < cLimit/100
+    buyRange = math.round(smaSlow[0] * 1.05)
+    line.new(x1=0, y1=buyRange, x2=0, y2=buyRange, xloc=xloc.bar_index, extend=extend.both, color=color.blue, width=1, style = line.style_dotted)
+
+    
+if (bar_index == last_bar_index)
+    closePerc1 = math.round((close[0] - smaFast)/smaFast*100)
+    closePerc2 = math.round((close[0] - smaSlow)/smaSlow*100)
+    var disText = str.tostring(closePerc1) + "," + str.tostring(closePerc2)
+    var label1 = label.new(bar_index, high*1.05, text=disText, style=label.style_none)
+    label.set_x(label1, 0)
+    label.set_xloc(label1, time, xloc.bar_time)
+    label.set_size(label1, size.large)
+    if ((macdLine[0] > macdLine[1]) and (macdLine[1] > macdLine[2])) or (macdLine[0] > macdLine[2])
+        macdRising := true
+    if ((rsi[0] > rsi[1]) and (rsi[1] > rsi[2])) or (rsi[0] > rsi[2])
+        rsiRising := true
+    if (wma10[0] > wma10[1] and wma10[1] > wma10[2]) or (wma10[0] > wma10[2] )
+        smaRising := true
+    if (array.get(relStr, 0) > array.get(relStr, 1) and array.get(relStr, 1) > array.get(relStr, 2)) or (array.get(relStr, 0) > array.get(relStr, 2) )
+        rsRising := true
+
+
+plotchar(macdRising, "macdRising", "", location = location.top)
+plotchar(macdLine > signalLine, "macdLine > signalLine", "", location = location.top)
+plotchar((bar_index == last_bar_index) and rsi > 50 and not(rsiRising), "rsiRising", "", location = location.top)
+plotchar((bar_index == last_bar_index) and not(rsi > 50 or rsiRising), "rsiRising", "", location = location.top)
+
+plotshape(((bar_index == last_bar_index) and (sma200 < smaSlow) and (smaSlow < smaFast)) ? 1:0, size=size.tiny, color=color.green, style=shape.circle, location=location.bottom, offset=-16, text="Coma", textcolor = color.black)
+plotshape(((bar_index == last_bar_index) and not((sma200 < smaSlow) and (smaSlow < smaFast))) ? 1:0, size=size.tiny, color=color.red, style=shape.circle, location=location.bottom, offset=-16, text="Coma", textcolor = color.black)
+
+plotshape((bar_index == last_bar_index) and rsRising ? 1:0, size=size.tiny, color=color.green, style=shape.circle, location=location.bottom, offset=-8, text="RS", textcolor = color.black)
+plotshape((bar_index == last_bar_index) and not(rsRising) ? 1:0, size=size.tiny, color=color.red, style=shape.circle, location=location.bottom, offset=-8, text="RS", textcolor = color.black)
+
+plotshape((bar_index == last_bar_index) and (wma10 > wma30) and (wma30 > sma200) and (close > wma10) and smaRising ? 1:0, size=size.tiny, color=color.green, style=shape.circle, location=location.bottom, offset=0, text="Stg 2", textcolor = color.black)
+plotshape((bar_index == last_bar_index) and ((wma10 > wma30) and (wma30 > sma200) and (close > wma10)) and not(smaRising) ? 1:0, size=size.tiny, color=color.rgb(255, 208, 0, 16), style=shape.circle, location=location.bottom, offset=0, text="Stg 2", textcolor = color.black)
+plotshape((bar_index == last_bar_index) and not((wma10 > wma30) and (wma30 > sma200) and (close > wma10)) ? 1:0, size=size.tiny, color=color.red, style=shape.circle, location=location.bottom, offset=0, text="Stg 2", textcolor = color.black)
+
+plotshape((bar_index == last_bar_index) and rsi > 50 and rsiRising ? high*.85:0, size=size.tiny, color=color.green, style=shape.circle, location=location.bottom, offset=8, text="RSI", textcolor = color.black)
+plotshape((bar_index == last_bar_index) and rsi > 50 and not(rsiRising) ? high*.85:0, size=size.tiny, color=color.rgb(255, 208, 0, 16), style=shape.circle, location=location.bottom, offset=8, text="RSI", textcolor = color.black)
+plotshape((bar_index == last_bar_index) and rsi < 50 ? high*.85:0, size=size.tiny, color=color.red, style=shape.circle, location=location.bottom, offset=8, text="RSI", textcolor = color.black)
+
+plotshape((bar_index == last_bar_index) and macdLine > signalLine and macdRising ? high*.80:0, size=size.tiny, color=color.green, style=shape.circle, location=location.bottom, offset=16, text="MACD", textcolor = color.black)
+plotshape((bar_index == last_bar_index) and macdLine > signalLine and not(macdRising) ? high*.80:0, size=size.tiny, color=color.rgb(255, 208, 0, 16), style=shape.circle, location=location.bottom, offset=16, text="MACD", textcolor = color.black)
+plotshape((bar_index == last_bar_index) and macdLine < signalLine? high*.80:0, size=size.tiny, color=color.red, style=shape.circle, location=location.bottom, offset=16, text="MACD", textcolor = color.black)
+
+
+var cl0 = 0.0
+var cl1 = 0.0
+var cl2 = 0.0
+var op0 = 0.0
+var op1 = 0.0
+var op2 = 0.0
+var hg0 = 0.0
+var hg1 = 0.0
+var hg2 = 0.0
+var lw0 = 0.0
+var lw1 = 0.0
+var lw2 = 0.0
+var cl1p = 0.0
+var cl2p = 0.0
+var cl3p = 0.0
+var wrg1 = 0.0
+var rg1 = 0.0
+var rg2 = 0.0
+var rg3 = 0.0
+
+
+var weekend = true
+
+if ((dayofweek(timenow) == dayofweek.monday and hour(timenow) > 8) or dayofweek(timenow) == dayofweek.tuesday or dayofweek(timenow) == dayofweek.wednesday or dayofweek(timenow) == dayofweek.thursday or (dayofweek(timenow) == dayofweek.friday and hour(timenow) > 3))
+    weekend := false
+
+
+
+plotchar(weekend, "weekend", "", location = location.top)
+plotchar(dayofweek(timenow), "dayofweek", "", location = location.top)
+plotchar(dayofweek.monday, "Monday", "", location = location.top)
+plotchar(dayofweek.saturday, "Saturday", "", location = location.top)
+
+
+if not(weekend)
+    cl0 := close[1]
+    cl1 := close[2]
+    cl2 := close[3]
+    op0 := open[1]
+    op1 := open[2]
+    op2 := open[3]
+    hg0 := high[1]
+    hg1 := high[2]
+    hg2 := high[3]
+    lw0 := low[1]
+    lw1 := low[2]
+    lw2 := low[3]
+else if weekend
+    cl0 := close[0]
+    cl1 := close[1]
+    cl2 := close[2]
+    op0 := open[0]
+    op1 := open[1]
+    op2 := open[2]
+    hg0 := high[0]
+    hg1 := high[1]
+    hg2 := high[2]
+    lw0 := low[0]
+    lw1 := low[1]
+    lw2 := low[2]
+    
+
+
+if timeframe.isweekly and (bar_index == last_bar_index)
+    cl1p := math.abs((cl0-cl1)/cl1)
+    cl2p := math.abs((cl1-cl2)/cl2)
+    cl3p := math.abs((cl0-cl2)/cl2)
+    hg1mx = math.max(hg0, hg1, hg2)
+    lw1mn = math.min(lw0, lw1, lw2) 
+    wrg1 := math.abs((hg1mx-lw1mn)/lw1mn)
+    rg1 := math.abs((cl0-op0)/op0)
+    rg2 := math.abs((cl1-op1)/op1)
+    rg3 := math.abs((cl2-op2)/op2)
+    txtTghtWks = "Tight Wks"
+    coma = wma10 > wma30 and wma30 > sma200
+    if coma and cl1p < tghtwksClRange/100 and cl2p < tghtwksClRange/100 and cl3p < tghtwksClRange/100 and wrg1 < tghtwksCandleRange/100 and rg1 < tghtwksOpClRange/100 and rg2 < tghtwksOpClRange/100 and rg3 < tghtwksOpClRange/100
+        volumeConfirm = false
+        if weekend 
+            volumeConfirm := (volume[0] < sma50Vol) and (volume[1] < sma50Vol) and (volume[2] < sma50Vol )
+            if volumeConfirm
+                txtTghtWks := "Tight Wks and Vol less than 10WMA"
+            else
+                txtTghtWks := "Tight Wks and Vol not less than 10WMA"
+        if not weekend
+            volumeConfirm := (volume[1] < sma50Vol) and (volume[2] < sma50Vol) and (volume[3] < sma50Vol )
+            if volumeConfirm
+                txtTghtWks := "Tight Wks and Vol less than 10WMA"
+            else
+                txtTghtWks := "Tight Wks and Vol greater than 10WMA"
+            
+
+        var label1 = label.new(bar_index+2, high*1.10, text=txtTghtWks, style=label.style_none)
+        label.set_x(label1, 0)
+        label.set_xloc(label1, time, xloc.bar_time)
+        label.set_size(label1, size.normal)    
+//plot(buyRange, title="Buy Range", trackprice=true, color=color.red, style = plot.style_line)
+
+
+plotchar(barstate.isnew, "Bar State", "", location = location.top)
+plotchar(cl0, "cl0", "", location = location.top)
+plotchar(cl1, "cl1", "", location = location.top)
+plotchar(cl2, "cl2", "", location = location.top)
+
+plotchar(close[0], "Close 0", "", location = location.top)    
+plotchar(close[1], "Close 1", "", location = location.top)    
+plotchar(close[2], "Close 2", "", location = location.top)    
+plotchar((bar_index == last_bar_index), "Bar index same as last", "", location = location.top)
+plotchar(cl1p, "Cl1 Percent", "", location = location.top)
+plotchar(cl2p, "Cl2 Percent", "", location = location.top)
+plotchar(cl3p, "Cl3 Percent", "", location = location.top)
+plotchar(wrg1, "3 Weeks Range Percent", "", location = location.top)
+plotchar(rg1, "1st Week Range Percent", "", location = location.top)
+plotchar(rg2, "2nd Weeks Range Percent", "", location = location.top)
+plotchar(rg3, "3rd Weeks Range Percent", "", location = location.top)
+plotchar(cl1p < tghtwksClRange/100, "cl1p < tghtwksClRange/100", "", location = location.top)
+plotchar(cl2p < tghtwksClRange/100, "cl2p < tghtwksClRange/100", "", location = location.top)
+plotchar(cl3p < tghtwksClRange/100, "cl3p < tghtwksClRange/100", "", location = location.top)
+plotchar(wrg1 < tghtwksCandleRange/100, "wrg1 < tghtwksCandleRange/100", "", location = location.top)
+plotchar(rg1 < tghtwksOpClRange/100, "rg1 < tghtwksOpClRange/100", "", location = location.top)
+plotchar(rg2 < tghtwksOpClRange/100, "rg2 < tghtwksOpClRange/100", "", location = location.top)
+plotchar(rg3 < tghtwksOpClRange/100, "rg3 < tghtwksOpClRange/100", "", location = location.top)
+
+
+
+plotshape(showRSI and (ta.crossover(rsi, rsiMA) and rsi > 50) ? 1:0, size=size.normal, color=color.green, style=shape.arrowup, location=location.belowbar, offset=0, text="RSI", textcolor = color.black)
+plotshape(showRSI and (ta.crossunder(rsi, rsiMA) and rsi < 50) ? 1 : 0, size=size.normal, color=color.red, style=shape.arrowdown, location=location.abovebar, offset=0, text="RSI", textcolor = color.black)
+    
+plotshape(showMACD and (ta.crossover(macdLine, signalLine)) ? 1:0, size=size.normal, color=color.green, style=shape.arrowup, location=location.belowbar, offset=0, text="MACD", textcolor = color.blue)
+plotshape(showMACD and (ta.crossunder(macdLine, signalLine)) ? 1 : 0, size=size.normal, color=color.red, style=shape.arrowdown, location=location.abovebar, offset=0, text="MACD", textcolor = color.blue)
+
+
+
+plotshape(showSMA and (ta.crossover(smaFast, smaSlow)) ? 1:0, size=size.normal, color=color.green, style=shape.arrowup, location=location.belowbar, offset=0, text="SMA", textcolor = color.fuchsia)
+plotshape(showSMA and (ta.crossunder(smaFast, smaSlow)) ? 1 : 0, size=size.normal, color=color.red, style=shape.arrowdown, location=location.abovebar, offset=0, text="SMA", textcolor = color.fuchsia)
+
+
+
+plotshape(showCsl and timeframe.isweekly and math.abs((smaSlow - smaFast)/smaSlow) < cLimit/100 ? 1 : 0, size=size.normal, color=color.green, style=shape.arrowup, location=location.belowbar, offset=0, text="Csl", textcolor = color.teal)
+
