@@ -34,20 +34,20 @@ var rsRising = false
 if timeframe.isweekly
     smaSlow := ta.sma(close, slowSMALength)
     smaFast := ta.sma(close, fastSMALength)
-    sma200 := ta.sma(close, 40)
-    wma10 := ta.sma(close, 10)
-    wma30 := ta.sma(close, 30)
-    sma50Vol := ta.sma(volume, 10)
+	sma200 := ta.sma(close, 40)
+	wma10 := ta.sma(close, 10)
+	wma30 := ta.sma(close, 30)
+	sma50Vol := ta.sma(volume, 10)
 
-    
+	
 
 
 if timeframe.isdaily
     smaSlow := ta.sma(close, slowSMALength)
     smaFast := ta.sma(close, fastSMALength)
-    sma200 := ta.sma(close, 200)
-    wma10 := ta.sma(close, 50)
-    wma30 := ta.sma(close, 150)
+	sma200 := ta.sma(close, 200)
+	wma10 := ta.sma(close, 50)
+	wma30 := ta.sma(close, 150)
     sma50Vol := ta.sma(volume, 50)
 
 
@@ -80,20 +80,20 @@ if (bar_index == last_bar_index) and close[0] > smaFast and math.abs((smaSlow - 
     
 if (bar_index == last_bar_index)
     closePerc1 = math.round((close[0] - smaFast)/smaFast*100)
-    closePerc2 = math.round((close[0] - smaSlow)/smaSlow*100)
-    var disText = str.tostring(closePerc1) + "," + str.tostring(closePerc2)
+	closePerc2 = math.round((close[0] - smaSlow)/smaSlow*100)
+	var disText = str.tostring(closePerc1) + "," + str.tostring(closePerc2)
     var label1 = label.new(bar_index, high*1.05, text=disText, style=label.style_none)
     label.set_x(label1, 0)
     label.set_xloc(label1, time, xloc.bar_time)
     label.set_size(label1, size.large)
-    if ((macdLine[0] > macdLine[1]) and (macdLine[1] > macdLine[2])) or (macdLine[0] > macdLine[2])
-        macdRising := true
-    if ((rsi[0] > rsi[1]) and (rsi[1] > rsi[2])) or (rsi[0] > rsi[2])
-        rsiRising := true
-    if (wma10[0] > wma10[1] and wma10[1] > wma10[2]) or (wma10[0] > wma10[2] )
-        smaRising := true
-    if (array.get(relStr, 0) > array.get(relStr, 1) and array.get(relStr, 1) > array.get(relStr, 2)) or (array.get(relStr, 0) > array.get(relStr, 2) )
-        rsRising := true
+	if ((macdLine[0] > macdLine[1]) and (macdLine[1] > macdLine[2])) or (macdLine[0] > macdLine[2])
+		macdRising := true
+	if ((rsi[0] > rsi[1]) and (rsi[1] > rsi[2])) or (rsi[0] > rsi[2])
+		rsiRising := true
+	if (wma10[0] > wma10[1] and wma10[1] > wma10[2]) or (wma10[0] > wma10[2] )
+		smaRising := true
+	if (array.get(relStr, 0) > array.get(relStr, 1) and array.get(relStr, 1) > array.get(relStr, 2)) or (array.get(relStr, 0) > array.get(relStr, 2) )
+		rsRising := true
 
 
 plotchar(macdRising, "macdRising", "", location = location.top)
@@ -155,63 +155,88 @@ plotchar(dayofweek.saturday, "Saturday", "", location = location.top)
 
 
 if not(weekend)
-    cl0 := close[1]
-    cl1 := close[2]
-    cl2 := close[3]
-    op0 := open[1]
-    op1 := open[2]
-    op2 := open[3]
-    hg0 := high[1]
-    hg1 := high[2]
-    hg2 := high[3]
-    lw0 := low[1]
-    lw1 := low[2]
-    lw2 := low[3]
+	cl0 := close[1]
+	cl1 := close[2]
+	cl2 := close[3]
+	op0 := open[1]
+	op1 := open[2]
+	op2 := open[3]
+	hg0 := high[1]
+	hg1 := high[2]
+	hg2 := high[3]
+	lw0 := low[1]
+	lw1 := low[2]
+	lw2 := low[3]
 else if weekend
-    cl0 := close[0]
-    cl1 := close[1]
-    cl2 := close[2]
-    op0 := open[0]
-    op1 := open[1]
-    op2 := open[2]
-    hg0 := high[0]
-    hg1 := high[1]
-    hg2 := high[2]
-    lw0 := low[0]
-    lw1 := low[1]
-    lw2 := low[2]
-    
+	cl0 := close[0]
+	cl1 := close[1]
+	cl2 := close[2]
+	op0 := open[0]
+	op1 := open[1]
+	op2 := open[2]
+	hg0 := high[0]
+	hg1 := high[1]
+	hg2 := high[2]
+	lw0 := low[0]
+	lw1 := low[1]
+	lw2 := low[2]
+	
+
+plotchar(hg0, "hg0", "", location = location.top)
+plotchar(hg1, "hg1", "", location = location.top)
+plotchar(hg2, "hg2", "", location = location.top)
+
+plotchar(lw0, "lw0", "", location = location.top)
+plotchar(lw1, "lw1", "", location = location.top)
+plotchar(lw2, "lw2", "", location = location.top)
+
+plotchar(op0, "op0", "", location = location.top)
+plotchar(op1, "op1", "", location = location.top)
+plotchar(op2, "op2", "", location = location.top)
 
 
 if timeframe.isweekly and (bar_index == last_bar_index)
     cl1p := math.abs((cl0-cl1)/cl1)
-    cl2p := math.abs((cl1-cl2)/cl2)
+	cl2p := math.abs((cl1-cl2)/cl2)
     cl3p := math.abs((cl0-cl2)/cl2)
-    hg1mx = math.max(hg0, hg1, hg2)
-    lw1mn = math.min(lw0, lw1, lw2) 
-    wrg1 := math.abs((hg1mx-lw1mn)/lw1mn)
-    rg1 := math.abs((cl0-op0)/op0)
-    rg2 := math.abs((cl1-op1)/op1)
-    rg3 := math.abs((cl2-op2)/op2)
-    txtTghtWks = "Tight Wks"
-    coma = wma10 > wma30 and wma30 > sma200
-    if coma and cl1p < tghtwksClRange/100 and cl2p < tghtwksClRange/100 and cl3p < tghtwksClRange/100 and wrg1 < tghtwksCandleRange/100 and rg1 < tghtwksOpClRange/100 and rg2 < tghtwksOpClRange/100 and rg3 < tghtwksOpClRange/100
-        volumeConfirm = false
-        if weekend 
-            volumeConfirm := (volume[0] < sma50Vol) and (volume[1] < sma50Vol) and (volume[2] < sma50Vol )
-            if volumeConfirm
-                txtTghtWks := "Tight Wks and Vol less than 10WMA"
-            else
-                txtTghtWks := "Tight Wks and Vol not less than 10WMA"
-        if not weekend
-            volumeConfirm := (volume[1] < sma50Vol) and (volume[2] < sma50Vol) and (volume[3] < sma50Vol )
-            if volumeConfirm
-                txtTghtWks := "Tight Wks and Vol less than 10WMA"
-            else
-                txtTghtWks := "Tight Wks and Vol greater than 10WMA"
-            
+	hg1mx = math.max(hg0, hg1, hg2)
+	lw1mn = math.min(lw0, lw1, lw2) 
+	wrg1 := math.abs((hg1mx-lw1mn)/lw1mn)
+	rg1 := math.abs((cl0-op0)/op0)
+	rg2 := math.abs((cl1-op1)/op1)
+	rg3 := math.abs((cl2-op2)/op2)
+	txtTghtWks = "Tight Wks. Obs: "
+	coma = wma10 > wma30 and wma30 > sma200
+	if coma and cl1p < tghtwksClRange/100 and cl2p < tghtwksClRange/100 and cl3p < tghtwksClRange/100 and wrg1 < tghtwksCandleRange/100 and rg1 < tghtwksOpClRange/100 and rg2 < tghtwksOpClRange/100 and rg3 < tghtwksOpClRange/100
+		volumeConfirm = false
+		atLeast1CloseAboveHalf = false
+		if cl0 > hg0 - ((hg0 - lw0)/2)
+			txtTghtWks := txtTghtWks + "Wk[0] "
+			atLeast1CloseAboveHalf := true
+		if cl1 > hg1 - ((hg1 - lw1)/2)
+			txtTghtWks := txtTghtWks + "Wk[1] "
+			atLeast1CloseAboveHalf := true
+		if cl2 > hg2 - ((hg2 - lw2)/2)
+			txtTghtWks := txtTghtWks + "Wk[2] "
+			atLeast1CloseAboveHalf := true
+		if atLeast1CloseAboveHalf
+			txtTghtWks := txtTghtWks + "close near high "
+			
+		if weekend 
+			volumeConfirm := (volume[0] < sma50Vol) and (volume[1] < sma50Vol) and (volume[2] < sma50Vol )
+			if volumeConfirm
+				txtTghtWks := txtTghtWks + "Vol < 10WMA"
+			else
+				txtTghtWks := txtTghtWks + "Vol > 10WMA"
+		if not weekend
+			volumeConfirm := (volume[1] < sma50Vol) and (volume[2] < sma50Vol) and (volume[3] < sma50Vol )
+			if volumeConfirm
+				txtTghtWks := txtTghtWks + "Vol < 10WMA"
+			else
+				txtTghtWks := txtTghtWks + "Vol > 10WMA"
+			
 
-        var label1 = label.new(bar_index+2, high*1.10, text=txtTghtWks, style=label.style_none)
+	    var label1 = label.new(bar_index+2, high*1.10, text=txtTghtWks, style=label.style_none)
         label.set_x(label1, 0)
         label.set_xloc(label1, time, xloc.bar_time)
         label.set_size(label1, size.normal)    
@@ -223,9 +248,9 @@ plotchar(cl0, "cl0", "", location = location.top)
 plotchar(cl1, "cl1", "", location = location.top)
 plotchar(cl2, "cl2", "", location = location.top)
 
-plotchar(close[0], "Close 0", "", location = location.top)    
-plotchar(close[1], "Close 1", "", location = location.top)    
-plotchar(close[2], "Close 2", "", location = location.top)    
+plotchar(close[0], "Close 0", "", location = location.top)	
+plotchar(close[1], "Close 1", "", location = location.top)	
+plotchar(close[2], "Close 2", "", location = location.top)	
 plotchar((bar_index == last_bar_index), "Bar index same as last", "", location = location.top)
 plotchar(cl1p, "Cl1 Percent", "", location = location.top)
 plotchar(cl2p, "Cl2 Percent", "", location = location.top)
@@ -246,7 +271,7 @@ plotchar(rg3 < tghtwksOpClRange/100, "rg3 < tghtwksOpClRange/100", "", location 
 
 plotshape(showRSI and (ta.crossover(rsi, rsiMA) and rsi > 50) ? 1:0, size=size.normal, color=color.green, style=shape.arrowup, location=location.belowbar, offset=0, text="RSI", textcolor = color.black)
 plotshape(showRSI and (ta.crossunder(rsi, rsiMA) and rsi < 50) ? 1 : 0, size=size.normal, color=color.red, style=shape.arrowdown, location=location.abovebar, offset=0, text="RSI", textcolor = color.black)
-    
+	
 plotshape(showMACD and (ta.crossover(macdLine, signalLine)) ? 1:0, size=size.normal, color=color.green, style=shape.arrowup, location=location.belowbar, offset=0, text="MACD", textcolor = color.blue)
 plotshape(showMACD and (ta.crossunder(macdLine, signalLine)) ? 1 : 0, size=size.normal, color=color.red, style=shape.arrowdown, location=location.abovebar, offset=0, text="MACD", textcolor = color.blue)
 
